@@ -76,14 +76,46 @@ class FrontEnd:
         n *= 1/(2**15)
         return wav + n
 
-    # replace this with proper pre-emphasis filtering, using the self.preemphasis coefficient
-    def pre_emphasize(self, wav):
+    def pre_emphasize(self, coef:0.97):
+        
+        super().__init__()
+        self.coef = coef
+        self.preemphasis=self.wav
+        
+                self.register_buffer(
+            'flipped_filter', torch.FloatTensor([-self.coef, 1.]).unsqueeze(0).unsqueeze(0)
+        )
+
+    def forward(self, input: torch.tensor) -> torch.tensor:
+        assert len(input.size()) == 3, 'The number of dimensions of input tensor must be 3!'
+        # reflect padding to match lengths of in/out
+        input = F.pad(input, (1, 0), 'reflect')
+        return F.conv1d(input, self.flipped_filter)
+
+
+class InversePreEmphasis(torch.nn.Module):
+    """
+    Implement Inverse Pre-emphasis by using RNN to boost up inference speed.
+    """
+
+    def __init__(self, coef: float = 0.97):
+        super().__init__()
+        self.coef = coef
+        self.rnn = torch.nn.RNN(1, 1, 1, bias=False, batch_first=True)
+       
+        self.rnn.weight_ih_l0.data.fill_(1)
+    
+        self.rnn.weight_hh_l0.data.fill_(self.coef)
+
+    def forward(self, input: torch.tensor) -> torch.tensor:
+        x, _ = self.rnn(input.transpose(1, 2))
+        return x.transpose(1, 2)
         # apply pre-emphasis filtering on waveform
-        preemph_wav = []
+        preemph_wav = [x]
         return preemph_wav
 
     def wav_to_frames(self, wav):
-        # only process whole frames
+ 
         num_frames = int(np.floor((wav.shape[0] - self.win_size) / self.win_shift) + 1)
         frames = np.zeros([self.win_size, num_frames])
         for t in range(0, num_frames):
@@ -93,32 +125,35 @@ class FrontEnd:
             frames[:, t] = self.hamwin * frame
         return frames
 
-    # for each frame (column of 2D array 'frames'), compute the magnitude spectrum using the fft
     def frames_to_magspec(self, frames):
-        # compute the fft
-        # compute magnitude
-        magspec = []
+        self.frame=self.frames
+        spectrum = np.fft.fft(slices, axis=0)[:M // 2 + 1:-1]
+        spectrum = np.abs(spectrum)
+        magspec=[spectrum]
         return magspec
-
-    # for each frame(column of 2D array 'magspec'), compute the log mel spectrum, by applying the mel filterbank to the magnitude spectrum
-    def magspec_to_fbank(self, magspec):
-        # apply the mel filterbank
-        fbank = []
+    print(self.frame=self.magspec)
+    
+   def magspec_to_fbank(self, magspec):
+        self.mag=self.magspec
+        logSpectrum = numpy.log(magspec)
+        fbank = [logspectrum]
         return fbank
+    print(self.mag=self.fbank)
 
     # compute the mean vector of fbank coefficients in the utterance and subtract it from all frames of fbank coefficients
     def mean_norm_fbank(self, fbank):
+        self.flanky=self.flank
         # compute mean fbank vector of all frames
         # subtract it from each frame
         return fbank
 
-    # accumulates sufficient statistics for corpus mean and variance
+ 
     def accumulate_stats(self, fbank):
         self.global_mean += np.sum(fbank,axis=1)
         self.global_var += np.sum(fbank**2,axis=1)
         self.global_frames += fbank.shape[1]
 
-    # compute corpus mean and variance based on sufficient statistics
+   
     def compute_stats(self):
         self.global_mean /= self.global_frames
         self.global_var /= self.global_frames
