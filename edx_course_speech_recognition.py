@@ -5,9 +5,8 @@ lalala
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 class FrontEnd:
-    
+
     def __init__(self, samp_rate=16000, frame_duration=0.025, frame_shift=0.010, preemphasis=0.97,
                  num_mel=40, lo_freq=0, hi_freq=None, mean_norm_feat=True, mean_norm_wav=True, compute_stats=False):
         self.samp_rate = samp_rate
