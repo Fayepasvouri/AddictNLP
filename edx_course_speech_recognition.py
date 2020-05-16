@@ -141,7 +141,7 @@ class InversePreEmphasis(torch.nn.Module):
     print(self.mag=self.fbank)
 
     def mean_norm_fbank(self, fbank):
-        self.flanky=self.flank
+        self.fbanky=self.fbank
         low_freq_mel = 0
         high_freq_mel = (2595 * numpy.log10(1 + (sample_rate / 2) / 700))  # Convert Hz to Mel
         mel_points = numpy.linspace(low_freq_mel, high_freq_mel, nfilt + 2)  # Equally spaced in Mel scale
