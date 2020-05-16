@@ -140,7 +140,6 @@ class InversePreEmphasis(torch.nn.Module):
         return fbank
     print(self.mag=self.fbank)
 
-    # compute the mean vector of fbank coefficients in the utterance and subtract it from all frames of fbank coefficients
     def mean_norm_fbank(self, fbank):
         self.flanky=self.flank
         low_freq_mel = 0
